@@ -1,21 +1,40 @@
-//
-//  ContentView.swift
-//  RedPack
-//
-//  Created by Joshua Cheng on 9/12/23.
-//
-
 import SwiftUI
 
 struct ContentView: View {
+    @ObservedObject var sampleLibraryApp = SampleLibraryApp()
+
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+            Text("Sample Library App")
+                .font(.largeTitle)
+                .padding()
+
+            Button(action: {
+                sampleLibraryApp.importSample()
+                sampleLibraryApp.updateSampleList()
+            }) {
+                Text("Import Sample")
+                    .font(.headline)
+                    .padding()
+            }
+
+            Button(action: {
+                // Export the first sample in the library to the document directory
+                if let selectedSample = sampleLibraryApp.sampleLibrary.samples.first {
+                    let exportDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                    sampleLibraryApp.exportSample(sample: selectedSample, toDirectory: exportDirectoryURL)
+                }
+            }) {
+                Text("Export Sample")
+                    .font(.headline)
+                    .padding()
+            }
+
+            List(sampleLibraryApp.sampleLibrary.samples, id: \.fileURL) { sample in
+                Text("\(sample.category): \(sample.metadata)")
+            }
+            .padding()
         }
-        .padding()
     }
 }
 
