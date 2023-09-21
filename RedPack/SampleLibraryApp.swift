@@ -14,35 +14,31 @@ class SampleLibraryApp: ObservableObject{
     
         var audioPlayer: AVAudioPlayer?
        func importSample() {
-           // Construct the relative path to your testfile.wav
-            let relativePath = "Test.wav"
-            
-            // Get the URL of your app's main bundle
-           if let bundleURL = Bundle.main.url(forResource: relativePath, withExtension: "wav") {
-                // Check if the file actually exists at the specified URL
-                if FileManager.default.fileExists(atPath: bundleURL.path) {
-                    // Prompt the user for category and metadata input (simplified here).
-                    let category = "Default"
-                    let metadata = "This is a sample"
-
-                    // Add the sample to the library.
-                    sampleLibrary.importSample(fileURL: bundleURL, category: category, metadata: metadata)
-                    
-                    // Play the imported sound
-                    playSound(fileURL: bundleURL)
-                    
-                    // Update the sample list.
-                    updateSampleList()
-                } else {
-                    // Handle the case where the file does not exist
-                    print("File does not exist at: \(bundleURL.path)")
-                    // You can also show an error message to the user if needed.
-                }
-            } else {
-                // Handle the case where the file URL is nil
-                print("File URL is nil")
-                // You can also show an error message to the user if needed.
-            }
+           if let path = Bundle.main.path(forResource: "Test", ofType: "wav") {
+                  let url = URL(fileURLWithPath: path)
+                  
+                  do {
+                      // Create your audioPlayer in your parent class as a property
+                      audioPlayer = try AVAudioPlayer(contentsOf: url)
+                      audioPlayer?.play()
+                      
+                      // Prompt the user for category and metadata input (simplified here).
+                      let category = "Default"
+                      let metadata = "This is a sample"
+                      
+                      // Add the sample to the library.
+                      sampleLibrary.importSample(fileURL: url, category: category, metadata: metadata)
+                      
+                      // Update the sample list.
+                      updateSampleList()
+                  } catch {
+                      print("Couldn't load the file")
+                      // You can also show an error message to the user if needed.
+                  }
+              } else {
+                  print("File not found")
+                  // You can also show an error message to the user if needed.
+              }
        }
     // Function to play a sound
        private func playSound(fileURL: URL) {
@@ -53,6 +49,7 @@ class SampleLibraryApp: ObservableObject{
                print("Error playing sound: \(error.localizedDescription)")
            }
        }
+    
     //Funciton to play a sound
     func exportSample(sample: Sample, toDirectory directoryURL: URL) {
         // Implement the export functionality here

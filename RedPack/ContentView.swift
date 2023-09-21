@@ -11,7 +11,7 @@ struct ContentView: View {
 
             Button(action: {
                 sampleLibraryApp.importSample()
-                sampleLibraryApp.updateSampleList()
+                //sampleLibraryApp.updateSampleList()
             }) {
                 Text("Import Sample")
                     .font(.headline)
