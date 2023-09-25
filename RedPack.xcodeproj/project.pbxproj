@@ -14,7 +14,8 @@
 		475EBFE02AB15B8E003C12A3 /* Sample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475EBFDF2AB15B8E003C12A3 /* Sample.swift */; };
 		475EBFE22AB15BA1003C12A3 /* SampleLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475EBFE12AB15BA1003C12A3 /* SampleLibrary.swift */; };
 		475EBFE42AB15BAF003C12A3 /* SampleLibraryApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475EBFE32AB15BAF003C12A3 /* SampleLibraryApp.swift */; };
-		4782F8632ABC3F7F00EEB449 /* Test.wav in Resources */ = {isa = PBXBuildFile; fileRef = 4782F8622ABC3F7F00EEB449 /* Test.wav */; };
+		4782F86B2AC24C9E00EEB449 /* TestKit in Resources */ = {isa = PBXBuildFile; fileRef = 4782F86A2AC24C3A00EEB449 /* TestKit */; };
+		4782F8722AC24DB300EEB449 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 4782F8712AC24DB300EEB449 /* Sounds */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,7 +28,9 @@
 		475EBFDF2AB15B8E003C12A3 /* Sample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Sample.swift; sourceTree = "<group>"; };
 		475EBFE12AB15BA1003C12A3 /* SampleLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLibrary.swift; sourceTree = "<group>"; };
 		475EBFE32AB15BAF003C12A3 /* SampleLibraryApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SampleLibraryApp.swift; sourceTree = "<group>"; };
-		4782F8622ABC3F7F00EEB449 /* Test.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Test.wav; sourceTree = "<group>"; };
+		4782F86A2AC24C3A00EEB449 /* TestKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestKit; sourceTree = "<group>"; };
+		4782F86E2AC24D1100EEB449 /* Test.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Test.wav; sourceTree = "<group>"; };
+		4782F8712AC24DB300EEB449 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sounds; path = RedPack/Sounds; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,6 +47,7 @@
 		475EBFC42AB15B6C003C12A3 = {
 			isa = PBXGroup;
 			children = (
+				4782F8712AC24DB300EEB449 /* Sounds */,
 				475EBFCF2AB15B6C003C12A3 /* RedPack */,
 				475EBFCE2AB15B6C003C12A3 /* Products */,
 			);
@@ -84,7 +88,8 @@
 		4782F8612ABC3F6800EEB449 /* Sounds */ = {
 			isa = PBXGroup;
 			children = (
-				4782F8622ABC3F7F00EEB449 /* Test.wav */,
+				4782F86A2AC24C3A00EEB449 /* TestKit */,
+				4782F86E2AC24D1100EEB449 /* Test.wav */,
 			);
 			path = Sounds;
 			sourceTree = "<group>";
@@ -147,8 +152,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4782F8722AC24DB300EEB449 /* Sounds in Resources */,
+				4782F86B2AC24C9E00EEB449 /* TestKit in Resources */,
 				475EBFD82AB15B6D003C12A3 /* Preview Assets.xcassets in Resources */,
-				4782F8632ABC3F7F00EEB449 /* Test.wav in Resources */,
 				475EBFD52AB15B6D003C12A3 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

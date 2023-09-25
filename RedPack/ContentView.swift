@@ -17,6 +17,15 @@ struct ContentView: View {
                     .font(.headline)
                     .padding()
             }
+            
+            Button(action: {
+                // Call the assignMetadataToSamples function with a folder path
+                sampleLibraryApp.assignMetadataToSamples(inFolder: "Sounds/TestKit")
+            }) {
+                Text("Import Library")
+                    .font(.headline)
+                    .padding()
+            }
 
             Button(action: {
                 // Export the first sample in the library to the document directory

@@ -1,86 +1,116 @@
-//
-//  SampleLibraryApp.swift
-//  RedPack
-//
-//  Created by Joshua Cheng on 9/12/23.
-//
 import SwiftUI
 import Foundation
 import AVFoundation
 import Combine
-// Define the SampleLibraryApp class to handle the user interface and interactions
-class SampleLibraryApp: ObservableObject{
+
+class SampleLibraryApp: ObservableObject {
     @Published var sampleLibrary: SampleLibrary = SampleLibrary()
+    var audioPlayer: AVAudioPlayer?
     
-        var audioPlayer: AVAudioPlayer?
-       func importSample() {
-           if let path = Bundle.main.path(forResource: "Test", ofType: "wav") {
-                  let url = URL(fileURLWithPath: path)
-                  
-                  do {
-                      // Create your audioPlayer in your parent class as a property
-                      audioPlayer = try AVAudioPlayer(contentsOf: url)
-                      audioPlayer?.play()
-                      
-                      // Prompt the user for category and metadata input (simplified here).
-                      let category = "Default"
-                      let metadata = "This is a sample"
-                      
-                      // Add the sample to the library.
-                      sampleLibrary.importSample(fileURL: url, category: category, metadata: metadata)
-                      
-                      // Update the sample list.
-                      updateSampleList()
-                  } catch {
-                      print("Couldn't load the file")
-                      // You can also show an error message to the user if needed.
-                  }
-              } else {
-                  print("File not found")
-                  // You can also show an error message to the user if needed.
-              }
-       }
-    // Function to play a sound
-       private func playSound(fileURL: URL) {
-           do {
-               audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
-               audioPlayer?.play()
-           } catch {
-               print("Error playing sound: \(error.localizedDescription)")
-           }
-       }
-    
-    //Funciton to play a sound
-    func exportSample(sample: Sample, toDirectory directoryURL: URL) {
-        // Implement the export functionality here
-        // You should copy the sample's fileURL to the specified directory
-        let sourceURL = sample.fileURL
-           let fileName = sourceURL.lastPathComponent
-           let destinationURL = directoryURL.appendingPathComponent(fileName)
-           
-           do {
-               // Use FileManager to copy the sample file to the export directory.
-               try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
-               
-               // You can add additional logic here, such as displaying a success message.
-           } catch {
-               // Handle any errors that may occur during the copying process.
-               print("Error exporting sample: \(error.localizedDescription)")
-               // You can also show an error message to the user.
-           }
+    func importSample() {
+        if let path = Bundle.main.path(forResource: "Test", ofType: "wav") {
+            let url = URL(fileURLWithPath: path)
+            
+            do {
+                audioPlayer = try AVAudioPlayer(contentsOf: url)
+                if let player = audioPlayer {
+                    player.play()
+                } else {
+                    print("AVAudioPlayer is nil")
+                }
+                
+                let category = "Default"
+                let metadata = "This is a sample"
+                
+                sampleLibrary.importSample(fileURL: url, category: category, metadata: metadata)
+                
+                updateSampleList()
+            } catch {
+                print("Couldn't load the file: \(error.localizedDescription)")
+                // You can also show an error message to the user if needed.
+            }
+        } else {
+            print("File not found")
+            // You can also show an error message to the user if needed.
+        }
     }
-           
+    
+    func assignMetadataToSamples(inFolder folderPath: String) {
+        let fileManager = FileManager.default
+        
+        if let path = Bundle.main.path(forResource: folderPath, ofType: nil) {
+            let folderURL = URL(fileURLWithPath: path)
+            
+            let sampleTypeMapping: [String: String] = [
+                "kick": "Kick",
+                "snare": "Snare",
+                "clap": "Clap",
+                "snap": "Snap",
+                "hat": "Hi-Hat",
+                "cymbal": "Cymbal",
+                "tom": "Tom",
+                "perc": "Percussion",
+                "fx": "FX"
+            ]
+            
+            do {
+                let folderContents = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
+                
+                for fileURL in folderContents {
+                    let fileExtension = fileURL.pathExtension.lowercased()
+                    if ["wav", "mp3", "aiff"].contains(fileExtension) {
+                        var sampleType = "Other"
+                        
+                        for (keyword, type) in sampleTypeMapping {
+                            if fileURL.lastPathComponent.lowercased().contains(keyword) {
+                                sampleType = type
+                                break
+                            }
+                        }
+                        
+                        let metadata = "This is a \(sampleType) sample"
+                        
+                        // You can add code here to store the metadata with the sample or perform other actions
+                        print("Sample: \(fileURL.lastPathComponent), Type: \(sampleType), Metadata: \(metadata)")
+                    }
+                }
+            } catch {
+                print("Error reading folder contents: \(error)")
+            }
+        } else {
+            print("Folder path not found")
+            // Handle the error or show an error message to the user.
+        }
+    }
 
-       func updateSampleList() {
-           // In this basic implementation, we'll simply notify SwiftUI to refresh the view.
-           // You can use @Published properties to achieve this.
-           // If you have more complex logic or filters, adjust it accordingly.
-           objectWillChange.send()
-       }
+    private func playSound(fileURL: URL) {
+        do {
+            audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
+            if let player = audioPlayer {
+                player.play()
+            } else {
+                print("AVAudioPlayer is nil")
+            }
+        } catch {
+            print("Error playing sound: \(error.localizedDescription)")
+        }
+    }
+    
+    func exportSample(sample: Sample, toDirectory directoryURL: URL) {
+        let sourceURL = sample.fileURL
+        let fileName = sourceURL.lastPathComponent
+        let destinationURL = directoryURL.appendingPathComponent(fileName)
+        
+        do {
+            try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            // You can add additional logic here, such as displaying a success message.
+        } catch {
+            print("Error exporting sample: \(error.localizedDescription)")
+            // You can also show an error message to the user.
+        }
+    }
+    
+    func updateSampleList() {
+        objectWillChange.send()
+    }
 }
-
-
-
-// You would need to add the GUI implementation using a framework like SwiftUI or UIKit
-// The GUI will call the methods of the SampleLibraryApp class to interact with the app
-
