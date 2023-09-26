@@ -1,4 +1,3 @@
-import SwiftUI
 import Foundation
 import AVFoundation
 import Combine
@@ -35,45 +34,55 @@ class SampleLibraryApp: ObservableObject {
         }
     }
     
-    func assignMetadataToSamples(inFolder folderPath: String) {
+    func importLibrary(inFolder folderPath: String) {
         let fileManager = FileManager.default
-        
+
         if let path = Bundle.main.path(forResource: folderPath, ofType: nil) {
             let folderURL = URL(fileURLWithPath: path)
-            
+
             let sampleTypeMapping: [String: String] = [
                 "kick": "Kick",
                 "snare": "Snare",
                 "clap": "Clap",
                 "snap": "Snap",
                 "hat": "Hi-Hat",
+                "hh": "Hi-Hat",
                 "cymbal": "Cymbal",
                 "tom": "Tom",
+                "808": "808",
                 "perc": "Percussion",
                 "fx": "FX"
             ]
-            
+
             do {
                 let folderContents = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
-                
+
                 for fileURL in folderContents {
                     let fileExtension = fileURL.pathExtension.lowercased()
                     if ["wav", "mp3", "aiff"].contains(fileExtension) {
                         var sampleType = "Other"
-                        
+
                         for (keyword, type) in sampleTypeMapping {
                             if fileURL.lastPathComponent.lowercased().contains(keyword) {
                                 sampleType = type
                                 break
                             }
                         }
-                        
+
                         let metadata = "This is a \(sampleType) sample"
-                        
-                        // You can add code here to store the metadata with the sample or perform other actions
+
+                        // Add the sample to the library
+                        sampleLibrary.importSample(fileURL: fileURL, category: sampleType, metadata: metadata)
+
+                        // You can also play the sound or perform other actions if needed
+                        //playSound(fileURL: fileURL)
+
                         print("Sample: \(fileURL.lastPathComponent), Type: \(sampleType), Metadata: \(metadata)")
                     }
                 }
+
+                // After importing, update the sample list
+                updateSampleList()
             } catch {
                 print("Error reading folder contents: \(error)")
             }
@@ -83,7 +92,7 @@ class SampleLibraryApp: ObservableObject {
         }
     }
 
-    private func playSound(fileURL: URL) {
+    func playSound(fileURL: URL) {
         do {
             audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
             if let player = audioPlayer {
