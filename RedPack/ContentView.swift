@@ -74,9 +74,9 @@ struct ContentView: View {
     }
     
     var body: some View {
-        NavigationView {
+     
             VStack {
-                Text("Sample Library App")
+                Text("RedPack")
                     .font(.largeTitle)
                     .padding()
                 
@@ -129,7 +129,7 @@ struct ContentView: View {
                 .onChange(of: selectedCategory) { _ in
                      handlePickerSelectionChange()
                  }
-                
+                .padding(.horizontal)
                 
                 // Use a ScrollView to display the samples vertically
                 ScrollView {
@@ -160,6 +160,8 @@ struct ContentView: View {
                         }
                         
                     }
+                    //padding for the sides of the scrollview
+                    .padding(.horizontal)
                     .padding()
                 }
                 
@@ -203,8 +205,7 @@ struct ContentView: View {
                 }
             }
         }
-        .navigationTitle("Sample Library")
-    }
+   
 }
 
 enum Direction {
