@@ -36,10 +36,10 @@ class SampleLibraryApp: ObservableObject {
     
     func importLibrary(inFolder folderPath: String) {
         let fileManager = FileManager.default
-
+        
         if let path = Bundle.main.path(forResource: folderPath, ofType: nil) {
             let folderURL = URL(fileURLWithPath: path)
-
+            
             let sampleTypeMapping: [String: String] = [
                 "kick": "Kick",
                 "snare": "Snare",
@@ -53,39 +53,47 @@ class SampleLibraryApp: ObservableObject {
                 "perc": "Percussion",
                 "fx": "FX"
             ]
-
-            do {
-                let folderContents = try fileManager.contentsOfDirectory(at: folderURL, includingPropertiesForKeys: nil)
-
-                for fileURL in folderContents {
-                    let fileExtension = fileURL.pathExtension.lowercased()
-                    if ["wav", "mp3", "aiff"].contains(fileExtension) {
-                        var sampleType = "Other"
-
-                        for (keyword, type) in sampleTypeMapping {
-                            if fileURL.lastPathComponent.lowercased().contains(keyword) {
-                                sampleType = type
-                                break
+            
+            // Function to recursively search for audio files
+            func searchForAudioFiles(inDirectory directoryURL: URL) {
+                do {
+                    let folderContents = try fileManager.contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)
+                    
+                    for fileURL in folderContents {
+                        let fileExtension = fileURL.pathExtension.lowercased()
+                        if ["wav", "mp3", "aiff"].contains(fileExtension) {
+                            var sampleType = "Other"
+                            
+                            for (keyword, type) in sampleTypeMapping {
+                                if fileURL.lastPathComponent.lowercased().contains(keyword) {
+                                    sampleType = type
+                                    break
+                                }
                             }
+                            
+                            let metadata = "This is a \(sampleType) sample"
+                            
+                            // Add the sample to the library
+                            sampleLibrary.importSample(fileURL: fileURL, category: sampleType, metadata: metadata)
+                            
+                            // You can also play the sound or perform other actions if needed
+                            // playSound(fileURL: fileURL)
+                            
+                            print("Sample: \(fileURL.lastPathComponent), Type: \(sampleType), Metadata: \(metadata)")
+                        } else if fileURL.hasDirectoryPath {
+                            // If it's a directory, recursively search for audio files
+                            searchForAudioFiles(inDirectory: fileURL)
                         }
-
-                        let metadata = "This is a \(sampleType) sample"
-
-                        // Add the sample to the library
-                        sampleLibrary.importSample(fileURL: fileURL, category: sampleType, metadata: metadata)
-
-                        // You can also play the sound or perform other actions if needed
-                        //playSound(fileURL: fileURL)
-
-                        print("Sample: \(fileURL.lastPathComponent), Type: \(sampleType), Metadata: \(metadata)")
                     }
+                    
+                    // After importing, update the sample list
+                    updateSampleList()
+                } catch {
+                    print("Error reading folder contents: \(error)")
                 }
-
-                // After importing, update the sample list
-                updateSampleList()
-            } catch {
-                print("Error reading folder contents: \(error)")
             }
+            
+            searchForAudioFiles(inDirectory: folderURL)
         } else {
             print("Folder path not found")
             // Handle the error or show an error message to the user.
