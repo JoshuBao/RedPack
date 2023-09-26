@@ -1,25 +1,10 @@
 import SwiftUI
-
-// Define a ButtonStyle for the Splice-style buttons
-struct SpliceButtonStyle: ButtonStyle {
-    func makeBody(configuration: Self.Configuration) -> some View {
-        configuration.label
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(configuration.isPressed ? Color.blue.opacity(0.8) : Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(8)
-            .padding(3)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.white, lineWidth: 2)
-            )
-    }
-}
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @ObservedObject var sampleLibraryApp = SampleLibraryApp()
     @State private var selectedCategory = "All" // Initial selection for the Picker
+    @State private var selectedIndex = 0 // Track the selected sample index
 
     // Function to filter samples by category
     private func filteredSamples() -> [Sample] {
@@ -29,6 +14,42 @@ struct ContentView: View {
             return sampleLibraryApp.sampleLibrary.samples.filter { $0.category == selectedCategory }
         }
     }
+
+    private func dropLibrary(_ providers: [NSItemProvider]) -> Bool {
+        for provider in providers {
+            if provider.canLoadObject(ofClass: URL.self) {
+                _ = provider.loadObject(ofClass: URL.self) { url, _ in
+                    if let folderURL = url {
+                        // Handle the dropped folder URL
+                        self.sampleLibraryApp.importLibrary(inFolder: folderURL.path)
+                        print("Dropped folder path: \(folderURL.path)")
+                    }
+                }
+            }
+        }
+        return true
+    }
+
+    // Handle arrow key presses
+    func handleArrowKey(_ direction: Direction) {
+        switch direction {
+        case .up:
+            if selectedIndex > 0 {
+                selectedIndex -= 1
+            } else {
+                // Wrap to the last sample when reaching the top
+                selectedIndex = filteredSamples().count - 1
+            }
+        case .down:
+            if selectedIndex < filteredSamples().count - 1 {
+                selectedIndex += 1
+            } else {
+                // Wrap to the first sample when reaching the bottom
+                selectedIndex = 0
+            }
+        }
+    }
+
 
     var body: some View {
         NavigationView {
@@ -70,6 +91,7 @@ struct ContentView: View {
                 // Add the Picker to filter samples by category
                 Picker("Select Category", selection: $selectedCategory) {
                     Text("All").tag("All")
+                    Text("Other").tag("Other")
                     Text("Kick").tag("Kick")
                     Text("Snare").tag("Snare")
                     Text("Clap").tag("Clap")
@@ -77,35 +99,69 @@ struct ContentView: View {
                     Text("Hi-Hat").tag("Hi-Hat")
                     Text("Cymbal").tag("Cymbal")
                     Text("Tom").tag("Tom")
+                    Text("808").tag("808")
                     Text("Percussion").tag("Percussion")
                     Text("FX").tag("FX")
-                    Text("Other").tag("Other")
-                
                 }
                 .pickerStyle(MenuPickerStyle()) // Display the Picker as a menu style
 
                 // Use a ScrollView to display the samples vertically
                 ScrollView {
                     LazyVStack(spacing: 10) {
-                        ForEach(filteredSamples(), id: \.fileURL) { sample in
+                        ForEach(filteredSamples().indices, id: \.self) { index in
                             Button(action: {
                                 // Call the playSound function to play the sample
-                                sampleLibraryApp.playSound(fileURL: sample.fileURL)
+                                sampleLibraryApp.playSound(fileURL: filteredSamples()[index].fileURL)
+                                selectedIndex = index // Update the selected index
                             }) {
-                                Text("\(sample.name): \(sample.category)")
+                                Text("\(filteredSamples()[index].name): \(filteredSamples()[index].category)")
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding()
-                                    .buttonStyle(SpliceButtonStyle()) // Apply the SpliceButtonStyle to sample buttons
+                                    .background(selectedIndex == index ? Color.blue.opacity(0.8) : Color.clear)
+                                    .cornerRadius(8)
                             }
                         }
                     }
                     .padding()
                 }
 
+                // Add a drop target to import a library
+                Rectangle()
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(height: 100)
+                    .cornerRadius(10)
+                    .onDrop(of: [UTType.directory], isTargeted: nil) { providers in
+                        return self.dropLibrary(providers)
+                    }
             }
-            .navigationTitle("Sample Library")
+            .onAppear {
+                // Set up observers for keyboard events
+                NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                    if let key = event.charactersIgnoringModifiers, key == " " {
+                        // Handle spacebar key press
+                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL)
+                        return nil // Consume the event
+                    } else if event.keyCode == 125 {
+                        // Handle down arrow key press (keyCode 125)
+                        handleArrowKey(.down)
+                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL)
+                        return nil // Consume the event
+                    } else if event.keyCode == 126 {
+                        // Handle up arrow key press (keyCode 126)
+                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL)
+                        handleArrowKey(.up)
+                        return nil // Consume the event
+                    }
+                    return event
+                }
+            }
         }
+        .navigationTitle("Sample Library")
     }
+}
+
+enum Direction {
+    case up, down
 }
 
 struct ContentView_Previews: PreviewProvider {
