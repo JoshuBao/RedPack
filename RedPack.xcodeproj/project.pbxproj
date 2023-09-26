@@ -16,6 +16,7 @@
 		475EBFE42AB15BAF003C12A3 /* SampleLibraryApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 475EBFE32AB15BAF003C12A3 /* SampleLibraryApp.swift */; };
 		4782F86B2AC24C9E00EEB449 /* TestKit in Resources */ = {isa = PBXBuildFile; fileRef = 4782F86A2AC24C3A00EEB449 /* TestKit */; };
 		4782F8722AC24DB300EEB449 /* Sounds in Resources */ = {isa = PBXBuildFile; fileRef = 4782F8712AC24DB300EEB449 /* Sounds */; };
+		4782F8762AC2E18B00EEB449 /* DraggedSamplesManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4782F8752AC2E18B00EEB449 /* DraggedSamplesManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +32,7 @@
 		4782F86A2AC24C3A00EEB449 /* TestKit */ = {isa = PBXFileReference; lastKnownFileType = folder; path = TestKit; sourceTree = "<group>"; };
 		4782F86E2AC24D1100EEB449 /* Test.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = Test.wav; sourceTree = "<group>"; };
 		4782F8712AC24DB300EEB449 /* Sounds */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Sounds; path = RedPack/Sounds; sourceTree = "<group>"; };
+		4782F8752AC2E18B00EEB449 /* DraggedSamplesManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggedSamplesManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +69,7 @@
 				475EBFD02AB15B6C003C12A3 /* RedPackApp.swift */,
 				475EBFDF2AB15B8E003C12A3 /* Sample.swift */,
 				475EBFE12AB15BA1003C12A3 /* SampleLibrary.swift */,
+				4782F8752AC2E18B00EEB449 /* DraggedSamplesManager.swift */,
 				475EBFE32AB15BAF003C12A3 /* SampleLibraryApp.swift */,
 				475EBFD22AB15B6C003C12A3 /* ContentView.swift */,
 				4782F8612ABC3F6800EEB449 /* Sounds */,
@@ -166,6 +169,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4782F8762AC2E18B00EEB449 /* DraggedSamplesManager.swift in Sources */,
 				475EBFD32AB15B6C003C12A3 /* ContentView.swift in Sources */,
 				475EBFE22AB15BA1003C12A3 /* SampleLibrary.swift in Sources */,
 				475EBFE02AB15B8E003C12A3 /* Sample.swift in Sources */,
