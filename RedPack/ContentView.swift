@@ -5,6 +5,7 @@ struct ContentView: View {
     @ObservedObject var sampleLibraryApp = SampleLibraryApp()
     @State private var selectedCategory = "All" // Initial selection for the Picker
     @State private var selectedIndex = 0 // Track the selected sample index
+    @State private var volume: Double = 0.5 // Initial volume value
 
     // Function to filter samples by category
     private func filteredSamples() -> [Sample] {
@@ -50,7 +51,6 @@ struct ContentView: View {
         }
     }
 
-
     var body: some View {
         NavigationView {
             VStack {
@@ -71,18 +71,6 @@ struct ContentView: View {
                     sampleLibraryApp.importLibrary(inFolder: "Sounds/TestKit")
                 }) {
                     Text("Import Library")
-                        .font(.headline)
-                        .padding()
-                }
-                .buttonStyle(DefaultButtonStyle()) // Use the default button style for this button
-
-                Button(action: {
-                    if let selectedSample = sampleLibraryApp.sampleLibrary.samples.first {
-                        let exportDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                        sampleLibraryApp.exportSample(sample: selectedSample, toDirectory: exportDirectoryURL)
-                    }
-                }) {
-                    Text("Export Sample")
                         .font(.headline)
                         .padding()
                 }
@@ -111,7 +99,7 @@ struct ContentView: View {
                         ForEach(filteredSamples().indices, id: \.self) { index in
                             Button(action: {
                                 // Call the playSound function to play the sample
-                                sampleLibraryApp.playSound(fileURL: filteredSamples()[index].fileURL)
+                                sampleLibraryApp.playSound(fileURL: filteredSamples()[index].fileURL, volume: volume)
                                 selectedIndex = index // Update the selected index
                             }) {
                                 Text("\(filteredSamples()[index].name): \(filteredSamples()[index].category)")
@@ -133,22 +121,31 @@ struct ContentView: View {
                     .onDrop(of: [UTType.directory], isTargeted: nil) { providers in
                         return self.dropLibrary(providers)
                     }
+
+                // Volume Slider
+                HStack {
+                    Text("Volume:")
+                    Slider(value: $volume, in: 0.0...1.0)
+                        .frame(width: 150)
+                        .padding(.horizontal)
+                }
+                .padding()
             }
             .onAppear {
                 // Set up observers for keyboard events
                 NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                     if let key = event.charactersIgnoringModifiers, key == " " {
                         // Handle spacebar key press
-                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL)
+                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL, volume: volume)
                         return nil // Consume the event
                     } else if event.keyCode == 125 {
                         // Handle down arrow key press (keyCode 125)
                         handleArrowKey(.down)
-                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL)
+                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL, volume: volume)
                         return nil // Consume the event
                     } else if event.keyCode == 126 {
                         // Handle up arrow key press (keyCode 126)
-                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL)
+                        sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL, volume: volume)
                         handleArrowKey(.up)
                         return nil // Consume the event
                     }
