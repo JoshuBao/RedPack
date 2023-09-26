@@ -6,7 +6,8 @@ struct ContentView: View {
     @State private var selectedCategory = "All" // Initial selection for the Picker
     @State private var selectedIndex = 0 // Track the selected sample index
     @State private var volume: Double = 0.5 // Initial volume value
-
+    @State private var scrollTarget: Int? = nil // Track scroll target
+    
     // Function to filter samples by category
     private func filteredSamples() -> [Sample] {
         if selectedCategory == "All" {
@@ -15,7 +16,7 @@ struct ContentView: View {
             return sampleLibraryApp.sampleLibrary.samples.filter { $0.category == selectedCategory }
         }
     }
-
+    
     private func dropLibrary(_ providers: [NSItemProvider]) -> Bool {
         for provider in providers {
             if provider.canLoadObject(ofClass: URL.self) {
@@ -30,34 +31,55 @@ struct ContentView: View {
         }
         return true
     }
-
+    
     // Handle arrow key presses
     func handleArrowKey(_ direction: Direction) {
+        let filteredCount = filteredSamples().count
         switch direction {
         case .up:
-            if selectedIndex > 0 {
-                selectedIndex -= 1
-            } else {
-                // Wrap to the last sample when reaching the top
-                selectedIndex = filteredSamples().count - 1
+            if filteredCount > 1 {
+                if selectedIndex > 0 {
+                    selectedIndex -= 1
+                    scrollTarget = selectedIndex
+                } else {
+                    // Wrap to the last sample when reaching the top
+                    selectedIndex = filteredCount - 1
+                    scrollTarget = selectedIndex
+                }
             }
         case .down:
-            if selectedIndex < filteredSamples().count - 1 {
-                selectedIndex += 1
-            } else {
-                // Wrap to the first sample when reaching the bottom
-                selectedIndex = 0
+            if filteredCount > 1 {
+                if selectedIndex < filteredCount - 1 {
+                    selectedIndex += 1
+                    scrollTarget = selectedIndex
+                } else {
+                    // Wrap to the first sample when reaching the bottom
+                    selectedIndex = 0
+                    scrollTarget = selectedIndex
+                }
             }
         }
     }
-
+    // Handle picker selection change
+    private func handlePickerSelectionChange() {
+        let filtered = filteredSamples()
+        
+        if filtered.isEmpty {
+            // If there are no samples in the selected category, set selectedIndex to -1
+            selectedIndex = -1
+        } else if selectedIndex >= filtered.count {
+            // If the previous selectedIndex is out of bounds for the new category, set it to 0
+            selectedIndex = 0
+        }
+    }
+    
     var body: some View {
         NavigationView {
             VStack {
                 Text("Sample Library App")
                     .font(.largeTitle)
                     .padding()
-
+                
                 Button(action: {
                     sampleLibraryApp.importSample()
                 }) {
@@ -65,8 +87,8 @@ struct ContentView: View {
                         .font(.headline)
                         .padding()
                 }
-                .buttonStyle(DefaultButtonStyle()) // Use the default button style for this button
-
+                .buttonStyle(DefaultButtonStyle())
+                
                 Button(action: {
                     sampleLibraryApp.importLibrary(inFolder: "Sounds/TestKit")
                 }) {
@@ -74,8 +96,20 @@ struct ContentView: View {
                         .font(.headline)
                         .padding()
                 }
-                .buttonStyle(DefaultButtonStyle()) // Use the default button style for this button
-
+                .buttonStyle(DefaultButtonStyle())
+                
+                Button(action: {
+                    if let selectedSample = sampleLibraryApp.sampleLibrary.samples.first {
+                        let exportDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                        sampleLibraryApp.exportSample(sample: selectedSample, toDirectory: exportDirectoryURL)
+                    }
+                }) {
+                    Text("Export Sample")
+                        .font(.headline)
+                        .padding()
+                }
+                .buttonStyle(DefaultButtonStyle())
+                
                 // Add the Picker to filter samples by category
                 Picker("Select Category", selection: $selectedCategory) {
                     Text("All").tag("All")
@@ -91,28 +125,44 @@ struct ContentView: View {
                     Text("Percussion").tag("Percussion")
                     Text("FX").tag("FX")
                 }
-                .pickerStyle(MenuPickerStyle()) // Display the Picker as a menu style
-
+                .pickerStyle(MenuPickerStyle())
+                .onChange(of: selectedCategory) { _ in
+                     handlePickerSelectionChange()
+                 }
+                
+                
                 // Use a ScrollView to display the samples vertically
                 ScrollView {
-                    LazyVStack(spacing: 10) {
-                        ForEach(filteredSamples().indices, id: \.self) { index in
-                            Button(action: {
-                                // Call the playSound function to play the sample
-                                sampleLibraryApp.playSound(fileURL: filteredSamples()[index].fileURL, volume: volume)
-                                selectedIndex = index // Update the selected index
-                            }) {
-                                Text("\(filteredSamples()[index].name): \(filteredSamples()[index].category)")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding()
-                                    .background(selectedIndex == index ? Color.blue.opacity(0.8) : Color.clear)
-                                    .cornerRadius(8)
+                    ScrollViewReader { scrollViewProxy in
+                        LazyVStack(spacing: 10) {
+                            ForEach(filteredSamples().indices, id: \.self) { index in
+                                Button(action: {
+                                    
+                                    selectedIndex = index // Update the selected index
+                                    // Call the playSound function to play the sample
+                                    sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL, volume: volume)
+                                }) {
+                                    Text("\(filteredSamples()[index].name): \(filteredSamples()[index].category)")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding()
+                                        .background(selectedIndex == index ? Color.blue.opacity(0.8) : Color.clear)
+                                        .cornerRadius(8)
+                                        .id(index) // Assign an ID for ScrollViewReader
+                                }
                             }
                         }
+                        
+                        .onChange(of: scrollTarget) { target in
+                            // Scroll to the target when it changes
+                            withAnimation {
+                                scrollViewProxy.scrollTo(target, anchor: .center)
+                            }
+                        }
+                        
                     }
                     .padding()
                 }
-
+                
                 // Add a drop target to import a library
                 Rectangle()
                     .fill(Color.gray.opacity(0.2))
@@ -121,8 +171,8 @@ struct ContentView: View {
                     .onDrop(of: [UTType.directory], isTargeted: nil) { providers in
                         return self.dropLibrary(providers)
                     }
-
-                // Volume Slider
+                
+                // Add a volume slider
                 HStack {
                     Text("Volume:")
                     Slider(value: $volume, in: 0.0...1.0)
