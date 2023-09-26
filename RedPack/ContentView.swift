@@ -79,6 +79,8 @@ struct ContentView: View {
                     Text("Tom").tag("Tom")
                     Text("Percussion").tag("Percussion")
                     Text("FX").tag("FX")
+                    Text("Other").tag("Other")
+                
                 }
                 .pickerStyle(MenuPickerStyle()) // Display the Picker as a menu style
 
@@ -90,7 +92,7 @@ struct ContentView: View {
                                 // Call the playSound function to play the sample
                                 sampleLibraryApp.playSound(fileURL: sample.fileURL)
                             }) {
-                                Text("\(sample.category): \(sample.metadata)")
+                                Text("\(sample.name): \(sample.category)")
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .padding()
                                     .buttonStyle(SpliceButtonStyle()) // Apply the SpliceButtonStyle to sample buttons

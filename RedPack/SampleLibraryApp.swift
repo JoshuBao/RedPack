@@ -20,8 +20,9 @@ class SampleLibraryApp: ObservableObject {
                 
                 let category = "Default"
                 let metadata = "This is a sample"
+                let name = url.lastPathComponent // Set the name to the file name
                 
-                sampleLibrary.importSample(fileURL: url, category: category, metadata: metadata)
+                sampleLibrary.importSample(fileURL: url, category: category, metadata: metadata, name: name) // Pass the name parameter
                 
                 updateSampleList()
             } catch {
@@ -33,7 +34,7 @@ class SampleLibraryApp: ObservableObject {
             // You can also show an error message to the user if needed.
         }
     }
-    
+
     func importLibrary(inFolder folderPath: String) {
         let fileManager = FileManager.default
         
@@ -72,9 +73,10 @@ class SampleLibraryApp: ObservableObject {
                             }
                             
                             let metadata = "This is a \(sampleType) sample"
+                            let name = fileURL.lastPathComponent // Set the name to the file name
                             
                             // Add the sample to the library
-                            sampleLibrary.importSample(fileURL: fileURL, category: sampleType, metadata: metadata)
+                            sampleLibrary.importSample(fileURL: fileURL, category: sampleType, metadata: metadata, name: name) // Pass the name parameter
                             
                             // You can also play the sound or perform other actions if needed
                             // playSound(fileURL: fileURL)
