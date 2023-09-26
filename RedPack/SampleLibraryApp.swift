@@ -102,18 +102,20 @@ class SampleLibraryApp: ObservableObject {
         }
     }
 
-    func playSound(fileURL: URL) {
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
-            if let player = audioPlayer {
-                player.play()
-            } else {
-                print("AVAudioPlayer is nil")
-            }
-        } catch {
-            print("Error playing sound: \(error.localizedDescription)")
-        }
-    }
+    func playSound(fileURL: URL, volume: Double) {
+           do {
+               audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
+               if let player = audioPlayer {
+                   player.volume = Float(volume) // Set the volume here
+                   player.play()
+               } else {
+                   print("AVAudioPlayer is nil")
+               }
+           } catch {
+               print("Error playing sound: \(error.localizedDescription)")
+           }
+       }
+       
     
     func exportSample(sample: Sample, toDirectory directoryURL: URL) {
         let sourceURL = sample.fileURL
