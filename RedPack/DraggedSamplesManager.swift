@@ -3,11 +3,21 @@ import UniformTypeIdentifiers
 
 class DraggedSamplesManager: ObservableObject {
     static let shared = DraggedSamplesManager()
-    
+
+    @Published var draggedSampleIndex: Int?
+
     private init() {}
-    
+
+    func isSampleDragged(_ index: Int) -> Bool {
+        return draggedSampleIndex == index
+    }
+
+    func setDraggedSampleIndex(_ index: Int?) {
+        draggedSampleIndex = index
+    }
+
     func exportSample(_ sample: Sample, to destinationURL: URL) {
-      
+ 
             do {
                 try FileManager.default.copyItem(at: sample.fileURL, to: destinationURL)
                 print("Sample exported successfully.")
