@@ -36,27 +36,20 @@ struct ContentView: View {
         let filteredCount = filteredSamples().count
         switch direction {
         case .up:
-            if filteredCount > 1 {
-                if selectedIndex > 0 {
-                    selectedIndex -= 1
-                    scrollTarget = selectedIndex
-                } else {
-                    selectedIndex = filteredCount - 1
-                    scrollTarget = selectedIndex
-                }
+            if filteredCount > 1 && selectedIndex > 0 {
+                selectedIndex -= 1
+                scrollTarget = selectedIndex
             }
         case .down:
-            if filteredCount > 1 {
-                if selectedIndex < filteredCount - 1 {
-                    selectedIndex += 1
-                    scrollTarget = selectedIndex
-                } else {
-                    selectedIndex = 0
-                    scrollTarget = selectedIndex
-                }
+            if filteredCount > 1 && selectedIndex < filteredCount - 1 {
+                selectedIndex += 1
+                scrollTarget = selectedIndex
             }
         }
     }
+
+
+
 
     private func handlePickerSelectionChange() {
         let filtered = filteredSamples()
