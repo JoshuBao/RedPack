@@ -138,6 +138,9 @@ class SampleLibraryApp: ObservableObject {
     }
     
     func updateSampleList() {
-        objectWillChange.send()
+        DispatchQueue.main.async {
+            self.objectWillChange.send()
+        }
     }
+
 }

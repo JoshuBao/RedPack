@@ -15,8 +15,9 @@ struct ContentView: View {
     
     @State private var importFolderURL: URL?
     @State private var isTargeted = false
-    
-    
+    @State private var currentPage = 0
+    let samplesPerPage = 50
+
     private func filteredSamples() -> [Sample] {
         var filteredSamples = sampleLibraryApp.sampleLibrary.samples
         
@@ -61,7 +62,6 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            
             // Search bar
             ZStack {
                 RoundedRectangle(cornerRadius: 20)
@@ -93,36 +93,8 @@ struct ContentView: View {
             .frame(width: 300)
             .padding(.vertical, 10)
             .padding(.horizontal, 20)
-//            Button(action: {
-//                sampleLibraryApp.importSample()
-//            }) {
-//                Text("Import Sample")
-//                    .font(.headline)
-//                    .padding()
-//            }
-//            .buttonStyle(DefaultButtonStyle())
-//            
-//            Button(action: {
-//                sampleLibraryApp.importLibrary(inFolder: "Sounds/TestKit", fromBundle:true)
-//            }) {
-//                Text("Import Library")
-//                    .font(.headline)
-//                    .padding()
-//            }
-//            .buttonStyle(DefaultButtonStyle())
-//            
-//            Button(action: {
-//                if let selectedSample = sampleLibraryApp.sampleLibrary.samples.first {
-//                    let exportDirectoryURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-//                    sampleLibraryApp.exportSample(sample: selectedSample, toDirectory: exportDirectoryURL)
-//                }
-//            }) {
-//                Text("Export Sample")
-//                    .font(.headline)
-//                    .padding()
-//            }
-//            .buttonStyle(DefaultButtonStyle())
-//            
+     
+            // Picker
             Picker("Select Category", selection: $selectedCategory) {
                 Text("All").tag("All")
                 Text("Other").tag("Other")
@@ -143,70 +115,103 @@ struct ContentView: View {
             }
             .padding(.horizontal)
             
-            ScrollView {
-                ScrollViewReader { scrollViewProxy in
-                    LazyVStack(spacing: 10) {
-                        ForEach(filteredSamples().indices, id: \.self) { index in
-                            let isDragged = draggedSamplesManager.isSampleDragged(index)
-                            
-                            Button(action: {
-                                selectedIndex = index
-                                sampleLibraryApp.playSound(fileURL: filteredSamples()[selectedIndex].fileURL, volume: volume)
-                            }) {
-                                Text("\(filteredSamples()[index].name): \(filteredSamples()[index].category)")
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding()
-                                    .background(selectedIndex == index ? Color.blue.opacity(0.8) : Color.clear)
-                                    .cornerRadius(8)
-                                    .id(index)
-                                    .opacity(isDragged ? 0.5 : 1.0)
-                            }
-                            .onDrag {
-                                draggedSamplesManager.setDraggedSampleIndex(index)
-                                
-                                let itemProvider = NSItemProvider(object: filteredSamples()[index].fileURL as NSURL)
-                                itemProvider.suggestedName = filteredSamples()[index].name
-                                
-                                return itemProvider
-                            }
-                            .onDrop(of: [UTType.fileURL], isTargeted: nil) { providers in
-                                draggedSamplesManager.setDraggedSampleIndex(nil)
-                                
-                                guard let itemProvider = providers.first else {
-                                    return false
-                                }
-                                
-                                itemProvider.loadObject(ofClass: NSURL.self) { item, error in
-                                    if let url = item as? URL {
-                                        if let draggedIndex = filteredSamples().firstIndex(where: { $0.fileURL == url }) {
-                                            let draggedSample = filteredSamples()[draggedIndex]
-                                            
-                                            let desktopURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
-                                            let destinationURL = desktopURL.appendingPathComponent(draggedSample.name)
-                                            
-                                            do {
-                                                try FileManager.default.copyItem(at: draggedSample.fileURL, to: destinationURL)
-                                                print("Sample copied successfully.")
-                                            } catch {
-                                                print("Error copying sample: \(error.localizedDescription)")
-                                            }
-                                        }
-                                    }
-                                }
-                                
-                                return true
-                            }
+            // Results Count
+            HStack {
+                Text("Results: \(filteredSamples().count)")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+                    .padding(.leading, 20)
+                Spacer()
+                HStack {
+                    Button("Previous") {
+                        if currentPage > 0 {
+                            currentPage -= 1
                         }
                     }
-                    .onChange(of: scrollTarget) { target in
-                        withAnimation {
-                            scrollViewProxy.scrollTo(target, anchor: .center)
+                    Spacer()
+                    Text("Page \(currentPage + 1)")
+                    Spacer()
+                    Button("Next") {
+                        let maxPageIndex = (filteredSamples().count - 1) / samplesPerPage
+                        if currentPage < maxPageIndex {
+                            currentPage += 1
                         }
                     }
                 }
-                .padding(.horizontal)
                 .padding()
             }
+
+            ScrollView {
+                           ScrollViewReader { scrollViewProxy in
+                               LazyVStack(spacing: 10) {
+                                   ForEach(samplesForCurrentPage.indices, id: \.self) { index in
+                                       let sampleIndex = currentPage * samplesPerPage + index
+                                       let isDragged = draggedSamplesManager.isSampleDragged(sampleIndex)
+                                       
+                                       Button(action: {
+                                           selectedIndex = sampleIndex
+                                           sampleLibraryApp.playSound(fileURL: samplesForCurrentPage[index].fileURL, volume: volume)
+                                       }) {
+                                           Text("\(samplesForCurrentPage[index].name): \(samplesForCurrentPage[index].category)")
+                                               .frame(maxWidth: .infinity, alignment: .leading)
+                                               .padding()
+                                               .background(selectedIndex == sampleIndex ? Color.blue.opacity(0.8) : Color.clear)
+                                               .cornerRadius(8)
+                                               .id(sampleIndex)
+                                               .opacity(isDragged ? 0.5 : 1.0)
+                                       }
+                                       .onDrag {
+                                           draggedSamplesManager.setDraggedSampleIndex(sampleIndex)
+                                           
+                                           let itemProvider = NSItemProvider(object: samplesForCurrentPage[index].fileURL as NSURL)
+                                           itemProvider.suggestedName = samplesForCurrentPage[index].name
+                                           
+                                           return itemProvider
+                                       }
+                                       .onDrop(of: [UTType.fileURL], isTargeted: nil) { providers in
+                                           draggedSamplesManager.setDraggedSampleIndex(nil)
+                                           
+                                           guard let itemProvider = providers.first else {
+                                               return false
+                                           }
+                                           
+                                           itemProvider.loadObject(ofClass: NSURL.self) { item, error in
+                                               if let url = item as? URL {
+                                                   if let draggedIndex = filteredSamples().firstIndex(where: { $0.fileURL == url }) {
+                                                       let draggedSample = filteredSamples()[draggedIndex]
+                                                       
+                                                       let desktopURL = FileManager.default.urls(for: .desktopDirectory, in: .userDomainMask).first!
+                                                       let destinationURL = desktopURL.appendingPathComponent(draggedSample.name)
+                                                       
+                                                       do {
+                                                           try FileManager.default.copyItem(at: draggedSample.fileURL, to: destinationURL)
+                                                           print("Sample copied successfully.")
+                                                       } catch {
+                                                           print("Error copying sample: \(error.localizedDescription)")
+                                                       }
+                                                   }
+                                               }
+                                           }
+                                           
+                                           return true
+                                       }
+                                   }
+                               }
+                               .onChange(of: scrollTarget) { target in
+                                   withAnimation {
+                                       scrollViewProxy.scrollTo(target, anchor: .center)
+                                   }
+                                   
+                                   // Update the current page when scrolling
+                                   if let target = target {
+                                       currentPage = target / samplesPerPage
+                                   }
+                               }
+                           }
+                           .padding(.horizontal)
+                           .padding()
+                       }
+                       
             
             // DropArea for importing folders
             RoundedRectangle(cornerRadius: 10)
@@ -219,20 +224,16 @@ struct ContentView: View {
                 .cornerRadius(10)
                 .onDrop(of: [UTType.fileURL], isTargeted: $isTargeted) { providers in
                     for provider in providers {
-                        // Check if the provider can load a file URL
                         if provider.canLoadObject(ofClass: NSURL.self) {
                             provider.loadObject(ofClass: NSURL.self) { url, error in
                                 if let error = error {
                                     self.handleError(error)
                                 } else if let url = url as? URL {
-                                    // Check if the URL represents a folder
                                     var isDirectory: ObjCBool = false
                                     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) {
                                         if isDirectory.boolValue {
-                                            // Handle the received folder URL
                                             print("Received folder URL: \(url.path)")
-                                            sampleLibraryApp.importLibrary(inFolder: url.path,fromBundle: false)
-                                            // Add your custom logic for handling the folder
+                                            sampleLibraryApp.importLibrary(inFolder: url.path, fromBundle: false)
                                         } else {
                                             // Handle non-folder files if needed
                                         }
@@ -268,6 +269,7 @@ struct ContentView: View {
                 }
         }
     }
+    
     func handleError(_ error: Error) {
         // Handle the error, e.g., show an alert to the user
         print("Error: \(error.localizedDescription)")
@@ -282,4 +284,16 @@ struct ContentView: View {
     enum Direction {
         case up, down
     }
+    
+    private var samplesForCurrentPage: [Sample] {
+        let startIndex = currentPage * samplesPerPage
+        let endIndex = min((currentPage + 1) * samplesPerPage, filteredSamples().count)
+        
+        // Ensure startIndex and endIndex are within bounds
+        guard startIndex < filteredSamples().count else { return [] }
+        let endIndexClamped = min(endIndex, filteredSamples().count)
+        
+        return Array(filteredSamples()[startIndex..<endIndexClamped])
+    }
+
 }
