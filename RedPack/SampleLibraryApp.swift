@@ -35,71 +35,77 @@ class SampleLibraryApp: ObservableObject {
         }
     }
 
-    func importLibrary(inFolder folderPath: String) {
+    func importLibrary(inFolder folderPath: String, fromBundle: Bool = true) {
         let fileManager = FileManager.default
-        
-        if let path = Bundle.main.path(forResource: folderPath, ofType: nil) {
-            let folderURL = URL(fileURLWithPath: path)
-            
-            let sampleTypeMapping: [String: String] = [
-                "kick": "Kick",
-                "snare": "Snare",
-                "clap": "Clap",
-                "snap": "Snap",
-                "hat": "Hi-Hat",
-                "hh": "Hi-Hat",
-                "cymbal": "Cymbal",
-                "tom": "Tom",
-                "808": "808",
-                "perc": "Percussion",
-                "fx": "FX"
-            ]
-            
-            // Function to recursively search for audio files
-            func searchForAudioFiles(inDirectory directoryURL: URL) {
-                do {
-                    let folderContents = try fileManager.contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)
-                    
-                    for fileURL in folderContents {
-                        let fileExtension = fileURL.pathExtension.lowercased()
-                        if ["wav", "mp3", "aiff"].contains(fileExtension) {
-                            var sampleType = "Other"
-                            
-                            for (keyword, type) in sampleTypeMapping {
-                                if fileURL.lastPathComponent.lowercased().contains(keyword) {
-                                    sampleType = type
-                                    break
-                                }
-                            }
-                            
-                            let metadata = "This is a \(sampleType) sample"
-                            let name = fileURL.lastPathComponent // Set the name to the file name
-                            
-                            // Add the sample to the library
-                            sampleLibrary.importSample(fileURL: fileURL, category: sampleType, metadata: metadata, name: name) // Pass the name parameter
-                            
-                            // You can also play the sound or perform other actions if needed
-                            // playSound(fileURL: fileURL)
-                            
-                            print("Sample: \(fileURL.lastPathComponent), Type: \(sampleType), Metadata: \(metadata)")
-                        } else if fileURL.hasDirectoryPath {
-                            // If it's a directory, recursively search for audio files
-                            searchForAudioFiles(inDirectory: fileURL)
-                        }
-                    }
-                    
-                    // After importing, update the sample list
-                    updateSampleList()
-                } catch {
-                    print("Error reading folder contents: \(error)")
-                }
+
+        var folderURL: URL
+
+        if fromBundle {
+            if let path = Bundle.main.path(forResource: folderPath, ofType: nil) {
+                folderURL = URL(fileURLWithPath: path)
+            } else {
+                print("Folder path not found in the bundle")
+                return
             }
-            
-            searchForAudioFiles(inDirectory: folderURL)
         } else {
-            print("Folder path not found")
-            // Handle the error or show an error message to the user.
+            folderURL = URL(fileURLWithPath: folderPath)
         }
+
+        let sampleTypeMapping: [String: String] = [
+            "kick": "Kick",
+            "snare": "Snare",
+            "clap": "Clap",
+            "snap": "Snap",
+            "hat": "Hi-Hat",
+            "hh": "Hi-Hat",
+            "cymbal": "Cymbal",
+            "tom": "Tom",
+            "808": "808",
+            "perc": "Percussion",
+            "fx": "FX"
+        ]
+
+        // Function to recursively search for audio files
+        func searchForAudioFiles(inDirectory directoryURL: URL) {
+            do {
+                let folderContents = try fileManager.contentsOfDirectory(at: directoryURL, includingPropertiesForKeys: nil)
+
+                for fileURL in folderContents {
+                    let fileExtension = fileURL.pathExtension.lowercased()
+                    if ["wav", "mp3", "aiff"].contains(fileExtension) {
+                        var sampleType = "Other"
+
+                        for (keyword, type) in sampleTypeMapping {
+                            if fileURL.lastPathComponent.lowercased().contains(keyword) {
+                                sampleType = type
+                                break
+                            }
+                        }
+
+                        let metadata = "This is a \(sampleType) sample"
+                        let name = fileURL.lastPathComponent // Set the name to the file name
+
+                        // Add the sample to the library
+                        sampleLibrary.importSample(fileURL: fileURL, category: sampleType, metadata: metadata, name: name) // Pass the name parameter
+
+                        // You can also play the sound or perform other actions if needed
+                        // playSound(fileURL: fileURL)
+
+                        print("Sample: \(fileURL.lastPathComponent), Type: \(sampleType), Metadata: \(metadata)")
+                    } else if fileURL.hasDirectoryPath {
+                        // If it's a directory, recursively search for audio files
+                        searchForAudioFiles(inDirectory: fileURL)
+                    }
+                }
+
+                // After importing, update the sample list
+                updateSampleList()
+            } catch {
+                print("Error reading folder contents: \(error)")
+            }
+        }
+
+        searchForAudioFiles(inDirectory: folderURL)
     }
 
     func playSound(fileURL: URL, volume: Double) {
