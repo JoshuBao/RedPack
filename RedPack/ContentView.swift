@@ -7,16 +7,25 @@ struct ContentView: View {
     @State private var selectedIndex = 0
     @State private var volume: Double = 0.5
     @State private var scrollTarget: Int? = nil
+    @State private var searchText: String = ""
 
     @ObservedObject var draggedSamplesManager = DraggedSamplesManager.shared
 
     private func filteredSamples() -> [Sample] {
-        if selectedCategory == "All" {
-            return sampleLibraryApp.sampleLibrary.samples
-        } else {
-            return sampleLibraryApp.sampleLibrary.samples.filter { $0.category == selectedCategory }
-        }
-    }
+           var filteredSamples = sampleLibraryApp.sampleLibrary.samples
+
+           // Apply category filter
+           if selectedCategory != "All" {
+               filteredSamples = filteredSamples.filter { $0.category == selectedCategory }
+           }
+
+           // Apply search filter
+           if !searchText.isEmpty {
+               filteredSamples = filteredSamples.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+           }
+
+           return filteredSamples
+       }
 
     private func dropLibrary(_ providers: [NSItemProvider]) -> Bool {
         for provider in providers {
@@ -63,9 +72,40 @@ struct ContentView: View {
 
     var body: some View {
         VStack {
-            Text("RedPack")
-                .font(.largeTitle)
-                .padding()
+        
+            // Search bar
+            ZStack {
+                RoundedRectangle(cornerRadius: 20) // Increase the corner radius to make it look like a bubble
+                    .fill(Color("TextFieldBackground")) // Use the same background color as the surrounding area
+                    .frame(height: 40)
+                
+                HStack {
+                    TextField("Search Samples", text: $searchText)
+                        .foregroundColor(Color.white) // Set text color to white
+                        .accentColor(Color("PrimaryText")) // Set accent color (cursor and selection) to custom color
+                        .background(Color.clear)
+                        .cornerRadius(10)
+                        .padding(.leading, 8)
+                        .onChange(of: searchText) { newValue in
+                            // Handle search text change
+                        }
+                        .colorScheme(.dark) // Ensure the text color remains white even in dark mode
+
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            searchText = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .padding(.trailing, 8)
+                        }
+                    }
+                }
+            }
+            .frame(width: 300)
+            .padding(.vertical, 10)
+            .padding(.horizontal, 20)
+
+          
 
             Button(action: {
                 sampleLibraryApp.importSample()
@@ -224,6 +264,7 @@ struct ContentView: View {
                 return event
             }
         }
+       
     }
 }
 
